@@ -1,13 +1,58 @@
-FROM python:3.11-slim-bookworm
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Stage 1: Builder
+FROM python:3.11-slim-bookworm as builder
+
 WORKDIR /app
 COPY requirements.txt .
-RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev curl && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apt-get purge -y --auto-remove gcc && \
-    rm -rf /var/lib/apt/lists/*
-COPY . .
-RUN python manage.py collectstatic --noinput
-COPY gunicorn.conf.py /app/
-CMD ["gunicorn", "--config", "gunicorn.conf.py", "ecommerce.wsgi:application"]
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && pip install --user --no-cache-dir -r requirements.txt celery[redis] flower \
+    && rm -rf /var/lib/apt/lists/*
+
+# Stage 2: Runtime
+FROM python:3.11-slim-bookworm
+
+# Security setup
+RUN groupadd -r django && \
+    useradd --no-log-init -r -g django django && \
+    mkdir -p /app/static && \
+    chown django:django /app
+
+RUN python -c "import celery; print(f'Celery {celery.__version__} installed')"
+
+WORKDIR /app
+
+# Copy from builder
+COPY --from=builder /root/.local /home/django/.local
+COPY --chown=django:django . .
+
+# Runtime deps
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Env vars
+ENV PATH="/home/django/.local/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    STATIC_ROOT="/app/static" \
+    SMS_PROVIDER="kavenegar" \
+    REDIS_URL="redis://redis:6379/1"
+
+# Collect static
+RUN python manage.py collectstatic --noinput && \
+    chown -R django:django /app/static
+
+# Celery configuration directory
+RUN mkdir -p /app/celery && \
+    chown django:django /app/celery
+
+# Celery beat schedule persistence
+VOLUME /app/celery
+
+USER django
+
+# Production server
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "ecommerce.wsgi:application"]

@@ -1,10 +1,11 @@
-FROM node:20-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+# Copy package files first for caching
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev  # Keep dev dependencies for HMR
 
+# Copy the rest and start dev server
 COPY . .
-
 CMD ["npm", "run", "dev"]
