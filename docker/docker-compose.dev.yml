@@ -22,16 +22,17 @@ services:
     ports:
       - "6379:6379"
     container_name: systemkadeh_redis_dev
-    command:
-      - redis-server /usr/local/etc/redis/redis.conf
-      - --save ""
+    command: redis-server /usr/local/etc/redis/redis.conf
     healthcheck:
       test: [ "CMD", "redis-cli", "-n", "1", "ping" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - systemkadeh_dev_net
     volumes:
       - redis_data_dev:/data
-      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./docker/redis/dev_redis.conf:/usr/local/etc/redis/redis.conf
 
   backend:
     build:
@@ -45,8 +46,8 @@ services:
     env_file:
       - ../.env.dev
     environment:
-      - DEV_MODE=True # Explicit flag
-      - REDIS_URL=redis://redis:6379/0 # OTP cache
+      - DEV_MODE=True
+      - REDIS_URL=redis://redis:6379
     depends_on:
       db:
         condition: service_healthy
