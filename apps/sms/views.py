@@ -1,0 +1,1 @@
+# SMS views can be added here if needed

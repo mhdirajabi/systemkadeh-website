@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}سبد خرید - {{ site_settings.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'core:home' %}">خانه</a></li>
+                    <li class="breadcrumb-item active">سبد خرید</li>
+                </ol>
+            </nav>
+            
+            <h2 class="mb-4">سبد خرید</h2>
+        </div>
+    </div>
+    
+    {% if cart.items.exists %}
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">آیتم‌های سبد خرید</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="cart-items">
+                            {% for item in cart.items.all %}
+                                <div class="cart-item border-bottom pb-3 mb-3" id="item-{{ item.id }}">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-2">
+                                            {% if item.product.images.first %}
+                                                <img src="{{ item.product.images.first.image.url }}" 
+                                                     alt="{{ item.product.name }}" 
+                                                     class="img-fluid rounded">
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                            <h6 class="mb-1">{{ item.display_name }}</h6>
+                                            <small class="text-muted">{{ item.product.brand.name }}</small>
+                                        </div>
+                                        
+                                        <div class="col-md-2">
+                                            <div class="input-group input-group-sm">
+                                                <button class="btn btn-outline-secondary" type="button"
+                                                        hx-post="{% url 'cart:update_cart_item' item.id %}"
+                                                        hx-vals='{"quantity": "{{ item.quantity|add:-1 }}"}'
+                                                        hx-target="#item-{{ item.id }}"
+                                                        hx-indicator="#item-loading-{{ item.id }}"
+                                                        {% if item.quantity <= 1 %}disabled{% endif %}>
+                                                    <i class="bi bi-dash"></i>
+                                                </button>
+                                                <input type="number" class="form-control text-center" 
+                                                       value="{{ item.quantity }}" min="1" 
+                                                       hx-post="{% url 'cart:update_cart_item' item.id %}"
+                                                       hx-trigger="change"
+                                                       hx-target="#item-{{ item.id }}"
+                                                       hx-indicator="#item-loading-{{ item.id }}"
+                                                       name="quantity">
+                                                <button class="btn btn-outline-secondary" type="button"
+                                                        hx-post="{% url 'cart:update_cart_item' item.id %}"
+                                                        hx-vals='{"quantity": "{{ item.quantity|add:1 }}"}'
+                                                        hx-target="#item-{{ item.id }}"
+                                                        hx-indicator="#item-loading-{{ item.id }}">
+                                                    <i class="bi bi-plus"></i>
+                                                </button>
+                                            </div>
+                                            <div id="item-loading-{{ item.id }}" class="htmx-indicator">
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                    <span class="visually-hidden">در حال به‌روزرسانی...</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-2">
+                                            <span class="price">{{ item.price|floatformat:0 }} تومان</span>
+                                        </div>
+                                        
+                                        <div class="col-md-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold">{{ item.total_price|floatformat:0 }} تومان</span>
+                                                <button class="btn btn-outline-danger btn-sm"
+                                                        hx-delete="{% url 'cart:remove_from_cart' item.id %}"
+                                                        hx-target="#item-{{ item.id }}"
+                                                        hx-confirm="آیا مطمئن هستید؟">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">خلاصه سفارش</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Coupon Form -->
+                        <form hx-post="{% url 'cart:apply_coupon' %}" hx-target="#coupon-result" hx-indicator="#coupon-loading">
+                            <div class="mb-3">
+                                <label for="coupon_code" class="form-label">کد تخفیف</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="coupon_code" name="coupon_code" 
+                                           placeholder="کد تخفیف" dir="ltr">
+                                    <button class="btn btn-outline-primary" type="submit">
+                                        <span id="coupon-loading" class="htmx-indicator">
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        </span>
+                                        اعمال
+                                    </button>
+                                </div>
+                                <div id="coupon-result" class="mt-2"></div>
+                            </div>
+                        </form>
+                        
+                        <!-- Order Summary -->
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>مجموع:</span>
+                                <span id="subtotal">{{ cart.total_price|floatformat:0 }} تومان</span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>هزینه ارسال:</span>
+                                <span id="shipping-cost">
+                                    {% if cart.total_price >= site_settings.free_shipping_threshold %}
+                                        رایگان
+                                    {% else %}
+                                        {{ site_settings.shipping_cost|floatformat:0 }} تومان
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            {% if request.session.applied_coupon %}
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span>تخفیف:</span>
+                                    <span>-{{ request.session.applied_coupon.discount|floatformat:0 }} تومان</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2">
+                                <span>مجموع کل:</span>
+                                <span id="total-amount">
+                                    {% if request.session.applied_coupon %}
+                                        {{ cart.total_price|add:request.session.applied_coupon.discount|floatformat:0 }} تومان
+                                    {% else %}
+                                        {{ cart.total_price|floatformat:0 }} تومان
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Checkout Button -->
+                        <div class="d-grid gap-2 mt-4">
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'checkout:checkout' %}" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-credit-card me-2"></i>تسویه حساب
+                                </a>
+                            {% else %}
+                                <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-person me-2"></i>ورود و تسویه حساب
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-right me-2"></i>ادامه خرید
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trust Badges -->
+                <div class="card mt-3">
+                    <div class="card-body text-center">
+                        <h6 class="fw-bold mb-3">چرا سیستمکده؟</h6>
+                        <div class="row text-center">
+                            <div class="col-6 mb-3">
+                                <i class="bi bi-shield-check text-success" style="font-size: 2rem;"></i>
+                                <div class="small">ضمانت اصالت</div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <i class="bi bi-truck text-primary" style="font-size: 2rem;"></i>
+                                <div class="small">ارسال سریع</div>
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-headphones text-info" style="font-size: 2rem;"></i>
+                                <div class="small">پشتیبانی ۲۴/۷</div>
+                            </div>
+                            <div class="col-6">
+                                <i class="bi bi-credit-card text-warning" style="font-size: 2rem;"></i>
+                                <div class="small">پرداخت امن</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty Cart -->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="bi bi-cart-x text-muted" style="font-size: 5rem;"></i>
+                    <h3 class="text-muted mt-3">سبد خرید شما خالی است</h3>
+                    <p class="text-muted">محصولات مورد نظر خود را به سبد خرید اضافه کنید</p>
+                    <a href="{% url 'catalog:product_list' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-shop me-2"></i>مشاهده محصولات
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle cart updates
+    document.body.addEventListener('htmx:afterRequest', function(event) {
+        if (event.detail.xhr.status === 200) {
+            const response = JSON.parse(event.detail.xhr.responseText);
+            if (response.success) {
+                // Update cart count in navbar
+                document.getElementById('cart-count').textContent = response.cart_total;
+                
+                // Update totals
+                if (response.cart_price) {
+                    document.getElementById('subtotal').textContent = response.cart_price + ' تومان';
+                }
+                
+                // Show success message
+                showToast('success', response.message);
+            } else {
+                showToast('danger', response.message);
+            }
+        }
+    });
+    
+    function showToast(type, message) {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+    }
+</script>
+{% endblock %}
