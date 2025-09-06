@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ site_settings.site_name }} - {{ site_settings.site_description }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    با سیستمکده، صدای ماشینت رو متحول کن!
+                </h1>
+                <p class="lead mb-4">
+                    بهترین سیستم‌های صوتی، مانیتورهای اندروید و تجهیزات امنیتی خودرو را با کیفیت و قیمت مناسب از سیستمکده تهیه کنید.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'catalog:product_list' %}" class="btn btn-light btn-lg">
+                        <i class="bi bi-shop me-2"></i>مشاهده محصولات
+                    </a>
+                    <a href="{% url 'blog:post_list' %}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-book me-2"></i>راهنمای خرید
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img src="{% static 'images/hero-car-audio.jpg' %}" alt="سیستم صوتی خودرو" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5>ضمانت کیفیت</h5>
+                    <p class="text-muted">تمام محصولات با ضمانت اصالت و کیفیت عرضه می‌شوند</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-truck text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5>ارسال سریع</h5>
+                    <p class="text-muted">ارسال رایگان برای خریدهای بالای ۵۰۰ هزار تومان</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-headphones text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5>پشتیبانی ۲۴/۷</h5>
+                    <p class="text-muted">تیم پشتیبانی ما همیشه آماده پاسخگویی به شماست</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="feature-card p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="bi bi-credit-card text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h5>پرداخت اقساطی</h5>
+                    <p class="text-muted">امکان خرید اقساطی با بهترین شرایط</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">دسته‌بندی محصولات</h2>
+                <p class="lead text-muted">محصولات ما را بر اساس نیازتان انتخاب کنید</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            {% for category in categories %}
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card category-card h-100 text-center">
+                        <div class="card-body">
+                            {% if category.icon %}
+                                <div class="category-icon mb-3">
+                                    <i class="{{ category.icon }} text-primary" style="font-size: 3rem;"></i>
+                                </div>
+                            {% elif category.image %}
+                                <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid mb-3" style="height: 80px; object-fit: contain;">
+                            {% endif %}
+                            <h5 class="card-title">{{ category.name }}</h5>
+                            <p class="card-text text-muted">{{ category.description|truncatewords:15 }}</p>
+                            <a href="{{ category.get_absolute_url }}" class="btn btn-outline-primary">
+                                مشاهده محصولات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">محصولات ویژه</h2>
+                <p class="lead text-muted">بهترین و پرفروش‌ترین محصولات سیستمکده</p>
+            </div>
+        </div>
+        
+        <div class="row" id="featured-products">
+            <!-- Products will be loaded here via HTMX -->
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'catalog:product_list' %}" class="btn btn-primary btn-lg">
+                مشاهده همه محصولات
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Banners Section -->
+{% if banners %}
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            {% for banner in banners %}
+                <div class="col-lg-6 mb-4">
+                    <div class="banner-card position-relative overflow-hidden rounded">
+                        <img src="{{ banner.image.url }}" alt="{{ banner.title }}" class="img-fluid w-100" style="height: 250px; object-fit: cover;">
+                        <div class="banner-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
+                            <div class="text-center">
+                                <h3 class="fw-bold">{{ banner.title }}</h3>
+                                {% if banner.subtitle %}
+                                    <p class="lead">{{ banner.subtitle }}</p>
+                                {% endif %}
+                                {% if banner.link %}
+                                    <a href="{{ banner.link }}" class="btn btn-light">مشاهده بیشتر</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Blog Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">آخرین مقالات</h2>
+                <p class="lead text-muted">راهنمای خرید و نکات مهم برای انتخاب بهترین محصولات</p>
+            </div>
+        </div>
+        
+        <div class="row" id="latest-posts">
+            <!-- Blog posts will be loaded here via HTMX -->
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'blog:post_list' %}" class="btn btn-outline-primary btn-lg">
+                مشاهده همه مقالات
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h3 class="fw-bold mb-3">در خبرنامه سیستمکده عضو شوید</h3>
+                <p class="lead">از آخرین محصولات، تخفیف‌ها و اخبار سیستمکده باخبر شوید</p>
+            </div>
+            <div class="col-lg-6">
+                <form hx-post="{% url 'core:newsletter_subscribe' %}" hx-target="#newsletter-result" hx-indicator="#newsletter-loading">
+                    <div class="input-group">
+                        <input type="email" class="form-control" name="email" placeholder="ایمیل شما" required>
+                        <button class="btn btn-light" type="submit">
+                            <span id="newsletter-loading" class="htmx-indicator">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            </span>
+                            عضویت
+                        </button>
+                    </div>
+                    <div id="newsletter-result" class="mt-2"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Load featured products on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        htmx.ajax('GET', '{% url "catalog:featured_products" %}', {
+            target: '#featured-products',
+            indicator: '#featured-loading'
+        });
+        
+        htmx.ajax('GET', '{% url "blog:latest_posts" %}', {
+            target: '#latest-posts',
+            indicator: '#posts-loading'
+        });
+    });
+</script>
+{% endblock %}

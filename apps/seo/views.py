@@ -1,0 +1,1 @@
+# SEO views can be added here if needed

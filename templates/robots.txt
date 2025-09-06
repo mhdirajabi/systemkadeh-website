@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: http://localhost:8000/sitemap.xml
+
+# Disallow admin
+Disallow: /admin/
+Disallow: /accounts/
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /payments/
+
+# Allow important pages
+Allow: /
+Allow: /catalog/
+Allow: /blog/
+Allow: /about/
+Allow: /contact/
