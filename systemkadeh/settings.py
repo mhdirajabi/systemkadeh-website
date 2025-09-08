@@ -55,6 +55,8 @@ LOCAL_APPS = [
     'apps.blog',
     'apps.marketing',
     'apps.seo',
+    'apps.analytics',
+    'apps.adminpanel',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -70,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.core.middleware.LanguageMiddleware',
+    'apps.analytics.middleware.AnalyticsMiddleware',
 ]
 
 ROOT_URLCONF = 'systemkadeh.urls'

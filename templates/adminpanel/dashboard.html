@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}پنل مدیریت سیستمکده{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">پنل مدیریت سیستمکده</h2>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card p-3"><div class="text-muted">کاربران</div><div class="fs-4 fw-bold">{{ users_count }}</div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3"><div class="text-muted">محصولات</div><div class="fs-4 fw-bold">{{ products_count }}</div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3"><div class="text-muted">سفارش‌ها</div><div class="fs-4 fw-bold">{{ orders_count }}</div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3"><div class="text-muted">درآمد (تومان)</div><div class="fs-4 fw-bold">{{ revenue_total|floatformat:0 }}</div></div>
+    </div>
+  </div>
+
+  <div class="card p-3">
+    <h6 class="mb-3">میانبرها</h6>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-primary btn-sm" href="/admin/">Django Admin</a>
+      <a class="btn btn-outline-primary btn-sm" href="{% url 'analytics:dashboard' %}">داشبورد آنالیتیکس</a>
+      <a class="btn btn-outline-primary btn-sm" href="{% url 'catalog:product_list' %}">محصولات</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

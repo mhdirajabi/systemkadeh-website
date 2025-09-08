@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}داشبورد آنالیتیکس - {{ site_settings.site_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.kpi-card { border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.kpi-value { font-size: 1.5rem; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">داشبورد آنالیتیکس</h2>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card kpi-card p-3">
+        <div class="text-muted">تعداد سفارش‌ها</div>
+        <div class="kpi-value">{{ orders_total }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card kpi-card p-3">
+        <div class="text-muted">درآمد کل (تومان)</div>
+        <div class="kpi-value">{{ revenue_total|floatformat:0 }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card kpi-card p-3">
+        <div class="text-muted">Unique Visitors</div>
+        <div class="kpi-value">{{ unique_visitors }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card kpi-card p-3">
+        <div class="text-muted">Page Views</div>
+        <div class="kpi-value">{{ page_views }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <div class="d-flex justify-content-between">
+          <h6 class="mb-3">فروش</h6>
+          <select id="sales-period" class="form-select form-select-sm w-auto">
+            <option value="day">روزانه</option>
+            <option value="week">هفتگی</option>
+            <option value="month" selected>ماهانه</option>
+            <option value="year">سالانه</option>
+          </select>
+        </div>
+        <canvas id="salesChart" height="180"></canvas>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card p-3">
+        <div class="d-flex justify-content-between">
+          <h6 class="mb-3">بازدید صفحات</h6>
+          <select id="pv-period" class="form-select form-select-sm w-auto">
+            <option value="day">روزانه</option>
+            <option value="week">هفتگی</option>
+            <option value="month" selected>ماهانه</option>
+            <option value="year">سالانه</option>
+          </select>
+        </div>
+        <canvas id="pvChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'analytics:export_pageviews_csv' %}">دانلود CSV بازدیدها</a>
+    <a class="btn btn-outline-success btn-sm" href="{% url 'analytics:export_pageviews_xlsx' %}">دانلود XLSX بازدیدها</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+function fetchJSON(url){ return fetch(url).then(r=>r.json()); }
+
+const salesCtx = document.getElementById('salesChart');
+const pvCtx = document.getElementById('pvChart');
+let salesChart, pvChart;
+
+async function loadSales(){
+  const period = document.getElementById('sales-period').value;
+  const data = await fetchJSON(`{% url 'analytics:sales_chart_data' %}?period=${period}`);
+  const ds = {
+    labels: data.labels,
+    datasets: [
+      { label: 'درآمد', data: data.totals, borderColor: '#ff6b35', backgroundColor: 'rgba(255,107,53,0.2)', tension: .3 },
+      { label: 'تعداد سفارش', data: data.counts, borderColor: '#004e89', backgroundColor: 'rgba(0,78,137,0.15)', tension: .3, yAxisID: 'y1' },
+    ]
+  };
+  const opt = { responsive: true, scales: { y: { beginAtZero: true }, y1: { beginAtZero: true, position: 'right' } } };
+  if (salesChart) salesChart.destroy();
+  salesChart = new Chart(salesCtx, { type: 'line', data: ds, options: opt });
+}
+
+async function loadPV(){
+  const period = document.getElementById('pv-period').value;
+  const data = await fetchJSON(`{% url 'analytics:pageviews_chart_data' %}?period=${period}`);
+  const ds = {
+    labels: data.labels,
+    datasets: [
+      { label: 'Page Views', data: data.counts, borderColor: '#17a2b8', backgroundColor: 'rgba(23,162,184,0.15)', tension: .3 },
+      { label: 'Unique Visitors', data: data.uniques, borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,0.15)', tension: .3 },
+    ]
+  };
+  const opt = { responsive: true, scales: { y: { beginAtZero: true } } };
+  if (pvChart) pvChart.destroy();
+  pvChart = new Chart(pvCtx, { type: 'line', data: ds, options: opt });
+}
+
+document.getElementById('sales-period').addEventListener('change', loadSales);
+document.getElementById('pv-period').addEventListener('change', loadPV);
+
+loadSales();
+loadPV();
+</script>
+{% endblock %}

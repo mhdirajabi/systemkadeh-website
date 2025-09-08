@@ -92,6 +92,19 @@ class SiteSettings(models.Model):
         verbose_name='حداقل خرید برای ارسال رایگان'
     )
     
+    # Live Chat Settings
+    chat_provider = models.CharField(
+        max_length=50,
+        choices=[('none', 'خاموش'), ('goftino', 'گفتینو'), ('mochat', 'موچت'), ('tawk', 'Tawk.to')],
+        default='none',
+        verbose_name='ارائه‌دهنده چت آنلاین'
+    )
+    chat_site_token = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='توکن/شناسه سایت چت'
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

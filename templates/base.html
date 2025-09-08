@@ -441,6 +441,24 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/main.js' %}"></script>
     
+    {# Live Chat Embeds #}
+    {% if site_settings.chat_provider != 'none' and site_settings.chat_site_token %}
+        {% if site_settings.chat_provider == 'goftino' %}
+            <script type="text/javascript">
+            !function(){var i="{{ site_settings.chat_site_token }}";function l(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,e.src="https://www.goftino.com/widget/"+i;var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}window.attachEvent?window.attachEvent("onload",l):window.addEventListener("load",l,!1)}();
+            </script>
+        {% elif site_settings.chat_provider == 'mochat' %}
+            <script>
+            (function(){var s=document.createElement('script');s.src='https://cdn.mochat.app/widget/{{ site_settings.chat_site_token }}.js';s.async=true;document.body.appendChild(s);})();
+            </script>
+        {% elif site_settings.chat_provider == 'tawk' %}
+            <script type="text/javascript">
+            var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+            (function(){var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];s1.async=true;s1.src='https://embed.tawk.to/{{ site_settings.chat_site_token }}';s1.charset='UTF-8';s1.setAttribute('crossorigin','*');s0.parentNode.insertBefore(s1,s0);})();
+            </script>
+        {% endif %}
+    {% endif %}
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
