@@ -38,6 +38,12 @@ def send_otp(request):
     if not phone:
         return JsonResponse({'success': False, 'message': 'شماره موبایل الزامی است.'})
     
+    # Rate limit ساده بر اساس session/IP
+    attempts = request.session.get('otp_attempts', 0)
+    if attempts >= 5:
+        return JsonResponse({'success': False, 'message': 'تعداد تلاش‌ها زیاد است. چند دقیقه دیگر تلاش کنید.'})
+    request.session['otp_attempts'] = attempts + 1
+
     # تولید کد ۶ رقمی
     code = ''.join(random.choices(string.digits, k=6))
     
@@ -99,8 +105,9 @@ def verify_otp(request):
         else:
             messages.success(request, f'خوش آمدید {user.full_name}')
         
-        # ورود کاربر
+        # ورود کاربر و ریست کردن نرخ محدودیت
         login(request, user)
+        request.session['otp_attempts'] = 0
         
         return JsonResponse({
             'success': True,

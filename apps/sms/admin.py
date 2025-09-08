@@ -19,7 +19,7 @@ class SMSLogAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
 
 
-@admin.register(SMTemplate)
+@admin.register(SMSTemplate)
 class SMSTemplateAdmin(admin.ModelAdmin):
     list_display = ['name', 'template_type', 'is_active', 'created_at']
     list_filter = ['template_type', 'is_active', 'created_at']

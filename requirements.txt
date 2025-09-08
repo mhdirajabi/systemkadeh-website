@@ -39,3 +39,4 @@ flake8==6.1.0
 mypy==1.7.1
 django-stubs==4.2.7
 openpyxl==3.1.2
+dj-database-url==2.1.0

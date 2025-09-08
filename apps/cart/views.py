@@ -39,14 +39,11 @@ def add_to_cart(request):
         if variant_id:
             variant = get_object_or_404(ProductVariant, id=variant_id, product=product, is_active=True)
         
-        # بررسی موجودی
+        # بررسی موجودی (فقط اعتبارسنجی، بدون کاهش موجودی در این مرحله)
         if product.track_inventory:
             available_stock = variant.stock_quantity if variant else product.stock_quantity
             if available_stock < quantity:
-                return JsonResponse({
-                    'success': False,
-                    'message': f'موجودی کافی نیست. موجودی: {available_stock}'
-                })
+                return JsonResponse({'success': False, 'message': 'موجودی کافی نیست'})
         
         # دریافت یا ایجاد سبد خرید
         cart = get_cart(request)
@@ -60,18 +57,8 @@ def add_to_cart(request):
         )
         
         if not created:
-            # افزایش تعداد
             cart_item.quantity += quantity
             cart_item.save()
-        
-        # به‌روزرسانی موجودی
-        if product.track_inventory:
-            if variant:
-                variant.stock_quantity -= quantity
-                variant.save()
-            else:
-                product.stock_quantity -= quantity
-                product.save()
         
         return JsonResponse({
             'success': True,
@@ -95,7 +82,7 @@ def update_cart_item(request, item_id):
         if quantity <= 0:
             return remove_from_cart(request, item_id)
         
-        # بررسی موجودی
+        # بررسی موجودی (بدون تغییر موجودی)
         if cart_item.product.track_inventory:
             available_stock = cart_item.variant.stock_quantity if cart_item.variant else cart_item.product.stock_quantity
             if available_stock < quantity:
@@ -108,15 +95,7 @@ def update_cart_item(request, item_id):
         cart_item.quantity = quantity
         cart_item.save()
         
-        # به‌روزرسانی موجودی
-        if cart_item.product.track_inventory:
-            quantity_diff = quantity - old_quantity
-            if cart_item.variant:
-                cart_item.variant.stock_quantity -= quantity_diff
-                cart_item.variant.save()
-            else:
-                cart_item.product.stock_quantity -= quantity_diff
-                cart_item.product.save()
+        # عدم تغییر موجودی در این مرحله؛ موجودی در مرحله تسویه کم می‌شود
         
         return JsonResponse({
             'success': True,
@@ -137,14 +116,7 @@ def remove_from_cart(request, item_id):
     try:
         cart_item = get_object_or_404(CartItem, id=item_id)
         
-        # بازگرداندن موجودی
-        if cart_item.product.track_inventory:
-            if cart_item.variant:
-                cart_item.variant.stock_quantity += cart_item.quantity
-                cart_item.variant.save()
-            else:
-                cart_item.product.stock_quantity += cart_item.quantity
-                cart_item.product.save()
+        # عدم دستکاری موجودی هنگام حذف از سبد
         
         cart_item.delete()
         

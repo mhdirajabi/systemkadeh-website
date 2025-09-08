@@ -8,6 +8,8 @@ from django.db.models import Q, F
 from django.core.paginator import Paginator
 from .models import Product, Category, Brand, Wishlist
 from .forms import ProductFilterForm
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 
 
 class ProductListView(ListView):
@@ -169,6 +171,7 @@ class ProductSearchView(ListView):
         return context
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class FeaturedProductsView(ListView):
     """محصولات ویژه"""
     model = Product

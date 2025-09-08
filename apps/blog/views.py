@@ -4,8 +4,11 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.db.models import Q
 from .models import BlogPost, BlogCategory, BlogTag
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 
 
+@method_decorator(cache_page(60 * 5), name='dispatch')
 class BlogListView(ListView):
     """لیست مقالات وبلاگ"""
     model = BlogPost
@@ -84,6 +87,7 @@ class BlogDetailView(DetailView):
 
 
 @require_GET
+@cache_page(60 * 5)
 def latest_posts(request):
     """آخرین مقالات برای HTMX"""
     posts = BlogPost.objects.filter(

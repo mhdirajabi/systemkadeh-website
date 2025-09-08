@@ -62,6 +62,10 @@ class Category(MPTTModel):
         verbose_name = 'دسته‌بندی'
         verbose_name_plural = 'دسته‌بندی‌ها'
         ordering = ['order', 'name']
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['is_active', 'is_featured']),
+        ]
     
     def __str__(self):
         return self.name
@@ -98,6 +102,10 @@ class Brand(models.Model):
         verbose_name = 'برند'
         verbose_name_plural = 'برندها'
         ordering = ['order', 'name']
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['is_active']),
+        ]
     
     def __str__(self):
         return self.name
@@ -256,6 +264,8 @@ class Product(models.Model):
             models.Index(fields=['status', 'is_featured']),
             models.Index(fields=['category', 'brand']),
             models.Index(fields=['price']),
+            models.Index(fields=['slug']),
+            models.Index(fields=['sku']),
         ]
     
     def __str__(self):
